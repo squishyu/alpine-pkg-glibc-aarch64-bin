@@ -1,21 +1,21 @@
-FROM aarch64/alpine
+FROM alpine
 
 # Create our user and setup Alpine for building APKs
-RUN apk --no-cache add alpine-sdk coreutils && \
+RUN apk --no-cache add sudo make alpine-sdk coreutils && \
+    chown root:root /usr/bin && \
+    chmod u+s /usr/bin/sudo && \
     adduser -G abuild -g "Alpine Package Builder" -s /bin/ash -D builder && \
     echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     mkdir /packages && \
     chown builder:abuild /packages
-        
+
+COPY ./info/* /home/builder
+
 USER builder
 WORKDIR /home/builder
 
 RUN abuild-keygen -a -i -n
 
-RUN git clone --single-branch https://github.com/squishyu/alpine-pkg-glibc-aarch64-bin.git upstream && \
-    mkdir packages && \
-    chown -R 1000 upstream packages && \
-    cd upstream && \
-    abuild -r
+RUN abuild -r
 
 #sudo apk add /home/builder/packages/builder/armhf/*.apk
